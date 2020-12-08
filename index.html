@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>hit me</title>
+        <style>
+            
+            body {
+                font-family: 'Hind Siliguri', sans-serif !important;
+            }
+            canvas {
+                border: 1px solid #d0d0d0;
+                background-color: #fff;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="angle-increase">angle increase</div>
+        <div class="angle-decrease">angle decrease</div>
+        <canvas id="canvas" width="1400" height="600"></canvas>
+        <script src="jquery-3.3.1.min.js"></script>
+        <script>
+
+            var HitMarker = function(parent, left, top, size) {
+                var self = this;
+
+                self.parent = parent;
+                self.top = top;
+                self.left = left;
+                self.size = size;
+
+                self.x = self.parent.position.x + self.left;
+                self.y = self.parent.position.y + self.top;
+
+                self.distanceFromCenter = Math.sqrt(self.left * self.left + self.top * self.top);
+                
+                self.initialAngle = Math.atan2(self.top , self.left) * 180/Math.PI;
+
+                console.log("top: " + self.top + " left: " + left);
+                console.log("initialangle: " + self.initialAngle);
+
+                self.UpdatePosition = function() {
+                    var theta_radians = (self.parent.currentAngle + self.initialAngle) * (Math.PI/180);
+
+                    // what is the adjacent (X)
+                    var adjacent = Math.cos(theta_radians) * self.distanceFromCenter;
+                    // what is the opposite (Y)
+                    var opposite = Math.sin(theta_radians) * self.distanceFromCenter;
+
+                    self.x = self.parent.position.x + adjacent;
+                    self.y = self.parent.position.y + opposite;
+                };
+            };
+
+            var ThingToHitModel = function() {
+                var self = this;
+
+                self.position = {
+                    x : 700,
+                    y : 300
+                };
+                self.hitMarkers = [];
+                self.currentAngle = 0;  // direction we are facing
+
+                self.ChangeAngle = function(angleDelta) {
+                    self.currentAngle = self.currentAngle + angleDelta;
+                    for(var i = 0; i < self.hitMarkers.length; i++) {
+                        self.hitMarkers[i].UpdatePosition();
+                    }
+                };
+
+                self.Draw = function(ctx) {
+                    // draw thi hit markers
+                    for(var i = 0; i < self.hitMarkers.length; i++) {
+                        //console.log("Drawing hit marker " + i)
+                        var marker = self.hitMarkers[i];
+                        ctx.save();
+                        ctx.beginPath();
+                        ctx.strokeStyle = "#FF0000";
+                        //ctx.moveTo(self.startPoint.x, self.startPoint.y);
+                        //console.log("left: " + marker.x + "; top: " + marker.y + "; size: " + marker.size )
+                        ctx.arc(marker.x, marker.y, marker.size, 0, 2 * Math.PI);
+                        ctx.stroke();
+                        ctx.restore();
+                    }
+                    // put a center point on
+                    ctx.save();
+                    ctx.fillRect(self.position.x - 2, self.position.y - 2, 4, 4)
+                    ctx.restore();
+                };
+
+                self.Initialize = function() {
+                    self.hitMarkers.push(new HitMarker(self, 0, 0, 20 ));
+                    self.hitMarkers.push(new HitMarker(self, 20, 0, 20 ));
+                    self.hitMarkers.push(new HitMarker(self, -20, 0, 20 ));
+                    self.hitMarkers.push(new HitMarker(self, -40, 0, 20 ));
+                    self.hitMarkers.push(new HitMarker(self, 0, 30, 10 ));
+                    self.hitMarkers.push(new HitMarker(self, 0, -30, 10 ));
+                };
+                self.Initialize();
+            };
+
+            var PageModel = function() {
+                var self = this;
+
+                self.canvas = document.getElementById('canvas');
+                self.ctx = self.canvas.getContext('2d');
+                self.thingsToHit = [];
+
+                self.Initialize = function() {
+                    self.thing = new ThingToHitModel();
+                }
+                self.Initialize();
+
+                self.DrawLoop = function() {
+                    self.ctx.clearRect(0, 0, self.canvas.width, self.canvas.height);
+                    self.thing.Draw(self.ctx);
+                    setTimeout(self.DrawLoop, 100);
+                }
+                self.DrawLoop();
+            }
+            var pageModel = new PageModel();
+
+
+            $("#canvas").on("mousemove", function(event) {
+                //jumpModel.ProcessMouseMove(event);
+            });
+            $(".angle-increase").on("click", function(event) {
+                pageModel.thing.ChangeAngle(15);
+            });
+            $(".angle-decrease").on("click", function(event) {
+                pageModel.thing.ChangeAngle(-15);
+            });
+
+        </script>
+    </body>
+</html>
