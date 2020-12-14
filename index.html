@@ -36,9 +36,6 @@
                 
                 self.initialAngle = Math.atan2(self.top , self.left) * 180/Math.PI;
 
-                // console.log("top: " + self.top + " left: " + left);
-                // console.log("initialangle: " + self.initialAngle);
-
                 self.UpdatePosition = function() {
                     var theta_radians = (self.parent.currentAngle + self.initialAngle) * (Math.PI/180);
 
@@ -50,6 +47,7 @@
                     self.x = self.parent.position.x + adjacent;
                     self.y = self.parent.position.y + opposite;
                 };
+                self.UpdatePosition();  // align with the inital angle of the parent
 
                 self.CheckForHit = function(x, y) {
                     // get the distance between the two points
@@ -65,15 +63,12 @@
                 };
             };
 
-            var ThingToHitModel = function() {
+            var ThingToHitModel = function(startPosition, hitMarkers) {
                 var self = this;
 
-                self.position = {
-                    x : 700,
-                    y : 300
-                };
+                self.position = startPosition;
                 self.hitMarkers = [];
-                self.currentAngle = 0;  // direction we are facing
+                self.currentAngle = 90;  // direction we are facing
 
                 self.ChangeAngle = function(angleDelta) {
                     self.currentAngle = self.currentAngle + angleDelta;
@@ -110,12 +105,9 @@
                 };
 
                 self.Initialize = function() {
-                    self.hitMarkers.push(new HitMarker(self, 0, 0, 15 ));
-                    self.hitMarkers.push(new HitMarker(self, 20, 0, 15 ));
-                    self.hitMarkers.push(new HitMarker(self, -20, 0, 15 ));
-                    self.hitMarkers.push(new HitMarker(self, -40, 0, 15 ));
-                    self.hitMarkers.push(new HitMarker(self, 0, 20, 10 ));
-                    self.hitMarkers.push(new HitMarker(self, 0, -20, 10 ));
+                    for(var i = 0; i < hitMarkers.length; i++) {
+                        self.hitMarkers.push(new HitMarker(self, hitMarkers[i].left, hitMarkers[i].top, hitMarkers[i].size ));
+                    }
                 };
                 self.Initialize();
             };
@@ -132,13 +124,30 @@
                 }
 
                 self.Initialize = function() {
-                    self.thing = new ThingToHitModel();
+                    var startPosition = {
+                        x : 700,
+                        y : 300
+                    };
+
+                    var hitMarkers = [];
+                    hitMarkers.push({ left: 0, top: 0, size: 15 });
+                    hitMarkers.push({ left: 20, top: 0, size: 15 });
+                    hitMarkers.push({ left: -20, top: 0, size: 15 });
+                    hitMarkers.push({ left: -40, top: 0, size: 15 });
+                    hitMarkers.push({ left: 0, top: 20, size: 10 });
+                    hitMarkers.push({ left: 0, top: -20, size: 10 });
+
+                    thing = new ThingToHitModel(startPosition, hitMarkers);
+                    self.thingsToHit.push(thing);
+
                 }
                 self.Initialize();
 
                 self.DrawLoop = function() {
                     self.ctx.clearRect(0, 0, self.canvas.width, self.canvas.height);
-                    self.thing.Draw(self.ctx);
+                    for(var i = 0; i < self.thingsToHit.length; i++) {
+                        self.thingsToHit[i].Draw(self.ctx);
+                    }
                     // draw the recorded mouse position
                     self.ctx.save();
                     self.ctx.fillStyle = "#ff0000";
@@ -150,7 +159,9 @@
 
                 self.HitDetectionLoop = function() {
                     // if we were clever we would only check this is the position has changed (we not clever)
-                    self.thing.CheckForHit(self.mousePosition.x, self.mousePosition.y);
+                    for(var i = 0; i < self.thingsToHit.length; i++) {
+                        self.thingsToHit[i].CheckForHit(self.mousePosition.x, self.mousePosition.y);
+                    }
                     setTimeout(self.HitDetectionLoop, 50);
                 };
                 self.HitDetectionLoop();
@@ -170,10 +181,10 @@
                 pageModel.UpdateMousePosition(event.pageX - posX, event.pageY - posY);
             });
             $(".angle-increase").on("click", function(event) {
-                pageModel.thing.ChangeAngle(15);
+                pageModel.thingsToHit[0].ChangeAngle(15);
             });
             $(".angle-decrease").on("click", function(event) {
-                pageModel.thing.ChangeAngle(-15);
+                pageModel.thingsToHit[0].ChangeAngle(-15);
             });
 
         </script>
