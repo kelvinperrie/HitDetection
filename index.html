@@ -61,6 +61,17 @@
                         self.currentHit = false;
                     }
                 };
+
+                self.Draw = function(ctx) {
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.strokeStyle = self.currentHit ? "#FF0000" : "#000000";
+                    //ctx.moveTo(self.startPoint.x, self.startPoint.y);
+                    //console.log("left: " + marker.x + "; top: " + marker.y + "; size: " + marker.size )
+                    ctx.arc(self.x, self.y, self.size, 0, 2 * Math.PI);
+                    ctx.stroke();
+                    ctx.restore();
+                }
             };
 
             var ThingToHitModel = function(startPosition, hitMarkers) {
@@ -85,18 +96,9 @@
                 };
 
                 self.Draw = function(ctx) {
-                    // draw thi hit markers
+                    // draw the hit markers
                     for(var i = 0; i < self.hitMarkers.length; i++) {
-                        //console.log("Drawing hit marker " + i)
-                        var marker = self.hitMarkers[i];
-                        ctx.save();
-                        ctx.beginPath();
-                        ctx.strokeStyle = marker.currentHit ? "#FF0000" : "#000000";
-                        //ctx.moveTo(self.startPoint.x, self.startPoint.y);
-                        //console.log("left: " + marker.x + "; top: " + marker.y + "; size: " + marker.size )
-                        ctx.arc(marker.x, marker.y, marker.size, 0, 2 * Math.PI);
-                        ctx.stroke();
-                        ctx.restore();
+                        self.hitMarkers[i].Draw(ctx);
                     }
                     // put a center point on
                     ctx.save();
