@@ -20,70 +20,6 @@
         <script src="jquery-3.3.1.min.js"></script>
         <script>
 
-            var HitMarkerRectangle = function(parent, left, top, width, height) {
-                var self = this;
-
-                self.parent = parent;
-                self.top = top;
-                self.left = left;
-                self.width = width;
-                self.height = height;
-                
-                self.x = self.parent.position.x + self.left;
-                self.y = self.parent.position.y + self.top;
-
-                self.initialAngle = Math.atan2(self.top , self.left) * 180/Math.PI;
-                console.log(self.initialAngle);
-
-                self.UpdatePosition = function() {
-
-                    self.x = self.parent.position.x + self.left;
-                    self.y = self.parent.position.y + self.top;
-                    return;
-
-                    var theta_radians = (self.parent.currentAngle + self.initialAngle) * (Math.PI/180);
-
-                    // what is the adjacent (X)
-                    var adjacent = Math.cos(theta_radians) * self.distanceFromCenter;
-                    // what is the opposite (Y)
-                    var opposite = Math.sin(theta_radians) * self.distanceFromCenter;
-
-                    self.x = self.parent.position.x + adjacent;
-                    self.y = self.parent.position.y + opposite;
-                };
-                self.UpdatePosition();  // align with the inital angle of the parent
-
-                self.CheckForHit = function(x, y) {
-
-                    return;
-
-                    // get the distance between the two points
-                    var deltaX = self.x - x;
-                    var deltaY = self.y - y;
-                    var distanceBetween = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-                    //console.log(deltaX + ", " + deltaY + ", " + distanceBetween);
-                    if (distanceBetween < self.size) {
-                        self.currentHit = true;
-                    } else {
-                        self.currentHit = false;
-                    }
-                };
-
-                self.Draw = function(ctx) {
-                    ctx.save();
-                    ctx.beginPath();
-                    ctx.strokeStyle = self.currentHit ? "#FF0000" : "#000000";
-                    //ctx.moveTo(self.startPoint.x, self.startPoint.y);
-                    console.log("left: " + self.x + "; top: " + self.y + "; width: " + self.width + "; height: " + self.height )
-                    //ctx.arc(self.x, self.y, self.size, 0, 2 * Math.PI);
-                    
-                    ctx.fillRect(self.x, self.y, self.width, self.height)
-
-                    ctx.stroke();
-                    ctx.restore();
-                }
-            }
-
             var HitMarkerCircle = function(parent, left, top, size) {
                 var self = this;
 
@@ -138,13 +74,33 @@
                 }
             };
 
-            var ThingToHitModel = function(startPosition, hitMarkers) {
+            var RocketModel = function(source, target) {
+                var self = this;
+
+                self.target = target;
+
+            };
+
+            var RocketLauncherModel = function(source, target) {
+                var self = this;
+
+                self.Fire = () => {
+                    console.log("firing!");
+                };
+                setTimeout(self.Fire, 3000);
+            };
+
+            var ThingToHitModel = function(startPosition, hitMarkers, positionOnCircle, angleOfDirection) {
                 var self = this;
 
                 self.position = startPosition;
                 self.hitMarkers = [];
-                self.currentAngle = 270;  // direction we are facing
-                self.directionAngle = 0;
+                self.currentAngle = positionOnCircle; //270;  // direction we are facing
+                self.directionAngle = angleOfDirection; //0;
+
+                self.weapons = [];
+
+                //self.weapons.push(new RocketLauncherModel(self, ));
 
                 self.ChangeAngle = function(angleDelta) {
                     self.currentAngle = self.currentAngle + angleDelta;
@@ -168,8 +124,8 @@
                     // we're just going to fly in a circle I guess
                     var distanceFromCenter = 200;
                     var centerOfCircle = {
-                        x : 200,
-                        y : 200
+                        x : 250,
+                        y : 250
                     };
                     var angleIncrement = 1;
 
@@ -201,8 +157,6 @@
                     for(var i = 0; i < hitMarkers.length; i++) {
                         if(hitMarkers[i].type === "circle") {
                             self.hitMarkers.push(new HitMarkerCircle(self, hitMarkers[i].left, hitMarkers[i].top, hitMarkers[i].size ));
-                        } else if (hitMarkers[i].type === "rectangle") {
-                            self.hitMarkers.push(new HitMarkerRectangle(self, hitMarkers[i].left, hitMarkers[i].top, hitMarkers[i].width, hitMarkers[i].height ));
                         }
                     }
                 };
@@ -222,8 +176,8 @@
 
                 self.Initialize = function() {
                     var startPosition = {
-                        x : 200,
-                        y : 400
+                        x : 450,
+                        y : 250
                     };
 
                     var hitMarkers = [];
@@ -235,7 +189,21 @@
                     hitMarkers.push({ type: "circle", left: 0, top: -20, size: 10 });
                     //hitMarkers.push({ type: "rectangle", left: 0, top: 0, height: 30, width: 50 });
 
-                    thing = new ThingToHitModel(startPosition, hitMarkers);
+                    var thing = new ThingToHitModel(startPosition, hitMarkers, 270, 0);
+                    self.thingsToHit.push(thing);
+
+                    
+                    startPosition = {
+                        x : 50,
+                        y : 250
+                    };
+
+                    hitMarkers = [];
+                    hitMarkers.push({ type: "circle", left: 0, top: 0, size: 40 });
+                    hitMarkers.push({ type: "circle", left: 40, top: 20, size: 10 });
+                    hitMarkers.push({ type: "circle", left: 40, top: -20, size: 10 });
+
+                    thing = new ThingToHitModel(startPosition, hitMarkers, 90 , 180);
                     self.thingsToHit.push(thing);
 
                 }
