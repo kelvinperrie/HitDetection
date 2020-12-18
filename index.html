@@ -60,6 +60,7 @@
                     } else {
                         self.currentHit = false;
                     }
+                    return self.currentHit;
                 };
 
                 self.Draw = function(ctx) {
@@ -74,20 +75,166 @@
                 }
             };
 
-            var RocketModel = function(source, target) {
+            var PulseModel = function(source, launcher, target) {
                 var self = this;
 
+                self.source = source;
+                self.launcher = launcher;
                 self.target = target;
 
+                self.position = {};
+                self.position.x = source.position.x;
+                self.position.y = source.position.y;
+                self.currentAngle = source.currentAngle;
+
+                self.exploded = false;
+
+                self.travelDistance = 20;
+
+                self.Move = function() {
+                    console.log("moving rocket")
+                    console.log("my current position is " + self.position.x + "," + self.position.y)
+                    console.log("my target is " + self.target.position.x + "," + self.target.position.y)
+                    var headingTo = target.position;
+
+                    // get the angle to our target
+                    var deltaY = self.target.position.y - self.position.y;
+                    var deltaX = self.target.position.x - self.position.x;
+                    var theta = Math.atan2(deltaY, deltaX);
+                    console.log("the angle is" + theta)
+
+                    //theta *= 180 / Math.PI;
+                    var theta_radians = theta;
+
+                    //var theta_radians = theta * (180 / Math.PI);
+                    // what is the adjacent (X)
+                    var adjacent = Math.cos(theta_radians) * self.travelDistance;
+                    // what is the opposite (Y)
+                    var opposite = Math.sin(theta_radians) * self.travelDistance;
+                    console.log("changing pos by x " + adjacent + " and y " + opposite)
+                    self.position.x = self.position.x + adjacent;
+                    self.position.y = self.position.y + opposite;
+
+                    if(self.target.CheckForHit(self.position.x, self.position.y)) {
+                        console.log("Boom");
+                        self.exploded = true;
+                        self.launcher.RemoveDeadRockets();
+                    }
+                }
+
+                self.Draw = function(ctx) {
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.strokeStyle = "#FF0000";
+                    ctx.arc(self.position.x, self.position.y, 4, 0, 2 * Math.PI);
+                    ctx.stroke();
+                    ctx.restore();
+                }
             };
 
-            var RocketLauncherModel = function(source, target) {
+            var RocketModel = function(source, launcher, target) {
                 var self = this;
 
-                self.Fire = () => {
-                    console.log("firing!");
+                self.source = source;
+                self.launcher = launcher;
+                self.target = target;
+
+                self.position = {};
+                self.position.x = source.position.x;
+                self.position.y = source.position.y;
+                self.currentAngle = source.currentAngle;
+
+                self.exploded = false;
+
+                self.travelDistance = 20;
+
+                self.Move = function() {
+                    console.log("moving rocket")
+                    console.log("my current position is " + self.position.x + "," + self.position.y)
+                    console.log("my target is " + self.target.position.x + "," + self.target.position.y)
+                    var headingTo = target.position;
+
+                    // get the angle to our target
+                    var deltaY = self.target.position.y - self.position.y;
+                    var deltaX = self.target.position.x - self.position.x;
+                    var theta = Math.atan2(deltaY, deltaX);
+                    console.log("the angle is" + theta)
+
+                    //theta *= 180 / Math.PI;
+                    var theta_radians = theta;
+
+                    //var theta_radians = theta * (180 / Math.PI);
+                    // what is the adjacent (X)
+                    var adjacent = Math.cos(theta_radians) * self.travelDistance;
+                    // what is the opposite (Y)
+                    var opposite = Math.sin(theta_radians) * self.travelDistance;
+                    console.log("changing pos by x " + adjacent + " and y " + opposite)
+                    self.position.x = self.position.x + adjacent;
+                    self.position.y = self.position.y + opposite;
+
+                    if(self.target.CheckForHit(self.position.x, self.position.y)) {
+                        console.log("Boom");
+                        self.exploded = true;
+                        self.launcher.RemoveDeadRockets();
+                    }
+                }
+
+                self.Draw = function(ctx) {
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.strokeStyle = "#FF0000";
+                    ctx.arc(self.position.x, self.position.y, 4, 0, 2 * Math.PI);
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            };
+
+            var RocketLauncherModel = function(source, launcher, target) {
+                var self = this;
+
+                self.source = source;
+                self.target = target;
+                self.rockets = [];
+
+                self.SetTarget = function(newTarget) {
+                    console.log("self.target was " + self.target)
+                    self.target = newTarget;
+                    console.log("self.target is now " + self.target)
                 };
+
+                self.RemoveDeadRockets = () => {
+                    console.log("we had " + self.rockets.length + " rockets");
+                    for(var i = self.rockets.length - 1; i >= 0; i--) {
+                        if(self.rockets[i].exploded) {
+                            self.rockets.splice(i, 1);
+                        }
+                    }
+                    console.log("we now have " + self.rockets.length + " rockets");
+                };
+
+                self.Fire = () => {
+                    if(self.target) {
+                        console.log("firing!");
+                        self.rockets.push(new RocketModel(self.source, self, self.target));
+
+                    }else {
+                        console.log("no target");
+                    }
+                    //setTimeout(self.Fire, 3000);
+                };
+                //self.Fire();
                 setTimeout(self.Fire, 3000);
+
+                self.Move = function() {
+                    for(var i = 0; i < self.rockets.length; i++) {
+                        self.rockets[i].Move();
+                    }
+                }
+                self.Draw = function(ctx) {
+                    for(var i = 0; i < self.rockets.length; i++) {
+                        self.rockets[i].Draw(ctx);
+                    }
+                }
             };
 
             var ThingToHitModel = function(startPosition, hitMarkers, positionOnCircle, angleOfDirection) {
@@ -100,7 +247,14 @@
 
                 self.weapons = [];
 
-                //self.weapons.push(new RocketLauncherModel(self, ));
+
+                self.SetTarget = function(target) {
+                    console.log("setting target on thing")
+                    for(var i = 0; i < self.weapons.length; i++) {
+                        console.log("about to set target on weapon " + i)
+                        self.weapons[i].SetTarget(target);
+                    }
+                };
 
                 self.ChangeAngle = function(angleDelta) {
                     self.currentAngle = self.currentAngle + angleDelta;
@@ -115,9 +269,14 @@
                 };
 
                 self.CheckForHit = function(x, y) {
+                    var hitSomething = false;
                     for(var i = 0; i < self.hitMarkers.length; i++) {
-                        self.hitMarkers[i].CheckForHit(x, y);
+                        // we're going to gothrougl the hitmarkers even if we already have a hit, could hit multiple?
+                        if(self.hitMarkers[i].CheckForHit(x, y)) {
+                            hitSomething = true;
+                        }
                     }
+                    return hitSomething;
                 };
 
                 self.Move = function() {
@@ -140,6 +299,10 @@
                     self.position.x = centerOfCircle.x + adjacent;
                     self.position.y = centerOfCircle.y + opposite;
                     self.UpdateMarkerPositions();
+
+                    for(var i = 0; i < self.weapons.length; i++) {
+                        self.weapons[i].Move();
+                    }
                 }
 
                 self.Draw = function(ctx) {
@@ -151,6 +314,10 @@
                     ctx.save();
                     ctx.fillRect(self.position.x - 2, self.position.y - 2, 4, 4)
                     ctx.restore();
+                    
+                    for(var i = 0; i < self.weapons.length; i++) {
+                        self.weapons[i].Draw(ctx);
+                    }
                 };
 
                 self.Initialize = function() {
@@ -190,6 +357,7 @@
                     //hitMarkers.push({ type: "rectangle", left: 0, top: 0, height: 30, width: 50 });
 
                     var thing = new ThingToHitModel(startPosition, hitMarkers, 270, 0);
+                    thing.weapons.push(new RocketLauncherModel(thing,null));
                     self.thingsToHit.push(thing);
 
                     
@@ -205,6 +373,9 @@
 
                     thing = new ThingToHitModel(startPosition, hitMarkers, 90 , 180);
                     self.thingsToHit.push(thing);
+
+                    console.log(self.thingsToHit[1]);
+                    self.thingsToHit[0].SetTarget(self.thingsToHit[1]);
 
                 }
                 self.Initialize();
