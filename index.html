@@ -20,6 +20,20 @@
         <script src="jquery-3.3.1.min.js"></script>
         <script>
 
+            function getAngle(targetA, sourceA) {
+                var a = targetA - sourceA;
+                a += (a > 180) ? -360 : (a < -180) ? 360 : 0;
+                return a;
+            }
+            function angle(cx, cy, ex, ey) {
+                var dy = ey - cy;
+                var dx = ex - cx;
+                var theta = Math.atan2(dy, dx); // range (-PI, PI]
+                theta *= 180 / Math.PI; // rads to degs, range (-180, 180]
+                //if (theta < 0) theta = 360 + theta; // range [0, 360)
+                return theta;
+            }
+
             var HitMarkerCircle = function(parent, left, top, size) {
                 var self = this;
 
@@ -144,11 +158,16 @@
                 self.position.y = source.position.y;
                 self.currentAngle = source.currentAngle;
 
+                self.turnIteration = 7;
+
                 self.exploded = false;
 
                 self.travelDistance = 20;
 
                 self.Move = function() {
+
+                    self.Turn();
+
                     console.log("moving rocket")
                     console.log("my current position is " + self.position.x + "," + self.position.y)
                     console.log("my target is " + self.target.position.x + "," + self.target.position.y)
@@ -161,9 +180,12 @@
                     console.log("the angle is" + theta)
 
                     //theta *= 180 / Math.PI;
-                    var theta_radians = theta;
+                    //var theta_radians = theta;
 
                     //var theta_radians = theta * (180 / Math.PI);
+
+                    var theta_radians = self.currentAngle * (Math.PI / 180);
+
                     // what is the adjacent (X)
                     var adjacent = Math.cos(theta_radians) * self.travelDistance;
                     // what is the opposite (Y)
@@ -178,6 +200,46 @@
                         self.launcher.RemoveDeadRockets();
                     }
                 }
+
+                self.Turn = function() {
+                    var angleToTarget = angle(self.position.x, self.position.y, self.target.position.x, self.target.position.y);
+
+                    // if the angle to the target is not the same as our current angle then adjust the current angle
+                    if (angleToTarget != self.currentAngle) {
+                        // angleToTarget ranges from -180 to 180. 0 is to the right, -90 is straight up, 90 is straight down.
+                        var newAngle;
+                        // if the turn iteration is larger than difference in angles then just put us on the target angle
+                        if (self.turnIteration > Math.abs(angleToTarget - self.currentAngle)) { // Math.abs(lol)
+                            console.log("zapping to target angle");
+                            self.currentAngle = angleToTarget;
+                            return;
+                        }
+                        
+                        // this needs to take into account the direction we are facing and the direction to the target
+                        if (getAngle(angleToTarget, self.currentAngle) <= 0) {
+                            // turn counter clock wise
+                            newAngle = self.currentAngle - self.turnIteration;
+                            //console.log("going CCW");
+                            if (newAngle < -180) {
+                                //console.log("angle past -180; flipping");
+                                newAngle = (newAngle + 360);
+                            }
+                        } else {
+                            // turn clock wise
+                            newAngle = self.currentAngle + self.turnIteration;
+                            //console.log("going CW");
+                            if (newAngle > 180) {
+                                //console.log("angle past 180; flipping");
+                                newAngle = (newAngle - 360);
+                            }
+                        }
+
+                        self.currentAngle = newAngle;
+
+                    }
+
+
+                };
 
                 self.Draw = function(ctx) {
                     ctx.save();
