@@ -16,6 +16,10 @@
     <body>
         <div class="angle-increase">angle increase</div>
         <div class="angle-decrease">angle decrease</div>
+        <div class="fire">fire</div>
+        <label for="show-images">show images </label><input type="checkbox" checked=checked id="show-images" /><br/>
+        <label for="show-hitmarkers">show hitmarkers </label><input type="checkbox" checked=checked id="show-hitmarkers" /><br/>
+        
         <canvas id="canvas" width="600" height="600"></canvas>
         <script src="jquery-3.3.1.min.js"></script>
         <script>
@@ -299,13 +303,17 @@
                 }
             };
 
-            var ThingToHitModel = function(startPosition, hitMarkers, positionOnCircle, angleOfDirection) {
+            var ThingToHitModel = function(imageSource, startPosition, hitMarkers, positionOnCircle, angleOfDirection) {
                 var self = this;
 
                 self.position = startPosition;
                 self.hitMarkers = [];
                 self.currentAngle = positionOnCircle; //270;  // direction we are facing
                 self.directionAngle = angleOfDirection; //0;
+                self.imageSource = imageSource;
+                self.image = new Image;
+                console.log("SETTING THE FILE TO "+ imageSource.file)
+                self.image.src = imageSource.file;
 
                 self.weapons = [];
 
@@ -340,7 +348,7 @@
                 self.CheckForHit = function(x, y) {
                     var hitSomething = false;
                     for(var i = 0; i < self.hitMarkers.length; i++) {
-                        // we're going to gothrougl the hitmarkers even if we already have a hit, could hit multiple?
+                        // we're going to go through the hitmarkers even if we already have a hit, could hit multiple?
                         if(self.hitMarkers[i].CheckForHit(x, y)) {
                             hitSomething = true;
                         }
@@ -359,6 +367,12 @@
 
                     self.directionAngle = self.directionAngle - angleIncrement;
                     self.currentAngle = self.currentAngle - angleIncrement;
+                    if (self.currentAngle < -180) {
+                        self.currentAngle = (self.currentAngle + 360);
+                    }
+                    if (self.currentAngle > 180) {
+                        self.currentAngle = (self.currentAngle - 360);
+                    }
 
                     var theta_radians = self.directionAngle * (Math.PI/180);
                     // what is the adjacent (X)
@@ -375,14 +389,24 @@
                 }
 
                 self.Draw = function(ctx) {
-                    // draw the hit markers
-                    for(var i = 0; i < self.hitMarkers.length; i++) {
-                        self.hitMarkers[i].Draw(ctx);
+                    // draw the image for this object
+                    if(pageModel && pageModel.showImages) {
+                        ctx.save();
+                        ctx.translate(self.position.x, self.position.y);
+                        ctx.rotate((self.currentAngle + 90) * Math.PI / 180);
+                        ctx.drawImage(self.image, self.imageSource.xOffset, self.imageSource.yOffset);
+                        ctx.restore();
                     }
-                    // put a center point on
-                    ctx.save();
-                    ctx.fillRect(self.position.x - 2, self.position.y - 2, 4, 4)
-                    ctx.restore();
+                    if(pageModel && pageModel.showHitMarkers) {
+                        // draw the hit markers
+                        for(var i = 0; i < self.hitMarkers.length; i++) {
+                            self.hitMarkers[i].Draw(ctx);
+                        }
+                        // put a center point on
+                        ctx.save();
+                        ctx.fillRect(self.position.x - 2, self.position.y - 2, 4, 4)
+                        ctx.restore();
+                    }
                     
                     for(var i = 0; i < self.weapons.length; i++) {
                         self.weapons[i].Draw(ctx);
@@ -408,7 +432,9 @@
                 self.mousePosition = {
                     x : 0,
                     y : 0
-                }
+                };
+                self.showImages = true;
+                self.showHitMarkers = true;
 
                 self.Initialize = function() {
                     var startPosition = {
@@ -425,7 +451,13 @@
                     hitMarkers.push({ type: "circle", left: 0, top: -20, size: 10 });
                     //hitMarkers.push({ type: "rectangle", left: 0, top: 0, height: 30, width: 50 });
 
-                    var thing = new ThingToHitModel(startPosition, hitMarkers, 270, 0);
+                    var imageSource = {
+                        file : "ship01.png",
+                        xOffset: -35,
+                        yOffset: -60
+                    }
+
+                    var thing = new ThingToHitModel(imageSource, startPosition, hitMarkers, 270, 0);
                     thing.weapons.push(new RocketLauncherModel(thing,null));
                     self.thingsToHit.push(thing);
 
@@ -439,8 +471,13 @@
                     hitMarkers.push({ type: "circle", left: 0, top: 0, size: 40 });
                     hitMarkers.push({ type: "circle", left: -40, top: 20, size: 10 });
                     hitMarkers.push({ type: "circle", left: -40, top: -20, size: 10 });
+                    imageSource = {
+                        file : "ship02.png",
+                        xOffset: -43.5,
+                        yOffset: -42.5
+                    }
 
-                    thing = new ThingToHitModel(startPosition, hitMarkers, 90 , 180);
+                    thing = new ThingToHitModel(imageSource, startPosition, hitMarkers, 90 , 180);
                     self.thingsToHit.push(thing);
 
                     console.log(self.thingsToHit[1]);
@@ -499,6 +536,15 @@
             });
             $(".angle-decrease").on("click", function(event) {
                 pageModel.thingsToHit[0].ChangeAngle(-15);
+            });
+            $(".fire").on("click", function(event) {
+                pageModel.thingsToHit[0].weapons[0].Fire();
+            });
+            $("#show-images").on("click", function() {
+                pageModel.showImages = $("#show-images").is(":checked");
+            });
+            $("#show-hitmarkers").on("click", function() {
+                pageModel.showHitMarkers = $("#show-hitmarkers").is(":checked");
             });
 
         </script>
