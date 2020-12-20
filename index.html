@@ -321,6 +321,13 @@
                 self.ChangeAngle = function(angleDelta) {
                     self.currentAngle = self.currentAngle + angleDelta;
                     console.log(self.currentAngle);
+                    if (self.currentAngle < -180) {
+                        self.currentAngle = (self.currentAngle + 360);
+                    }
+                    if (self.currentAngle > 180) {
+                        self.currentAngle = (self.currentAngle - 360);
+                    }
+                    console.log(self.currentAngle);
                     self.UpdateMarkerPositions();
                 };
 
