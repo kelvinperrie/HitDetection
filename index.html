@@ -16,7 +16,7 @@
     <body>
         <div class="angle-increase">angle increase</div>
         <div class="angle-decrease">angle decrease</div>
-        <canvas id="canvas" width="1400" height="600"></canvas>
+        <canvas id="canvas" width="600" height="600"></canvas>
         <script src="jquery-3.3.1.min.js"></script>
         <script>
 
@@ -282,7 +282,7 @@
                     }else {
                         console.log("no target");
                     }
-                    //setTimeout(self.Fire, 3000);
+                    setTimeout(self.Fire, 3000);
                 };
                 //self.Fire();
                 setTimeout(self.Fire, 3000);
@@ -345,13 +345,13 @@
                     // we're just going to fly in a circle I guess
                     var distanceFromCenter = 200;
                     var centerOfCircle = {
-                        x : 250,
-                        y : 250
+                        x : 300,
+                        y : 300
                     };
                     var angleIncrement = 1;
 
-                    self.directionAngle = self.directionAngle + angleIncrement;
-                    self.currentAngle = self.currentAngle + angleIncrement;
+                    self.directionAngle = self.directionAngle - angleIncrement;
+                    self.currentAngle = self.currentAngle - angleIncrement;
 
                     var theta_radians = self.directionAngle * (Math.PI/180);
                     // what is the adjacent (X)
@@ -405,15 +405,15 @@
 
                 self.Initialize = function() {
                     var startPosition = {
-                        x : 450,
-                        y : 250
+                        x : 500,
+                        y : 300
                     };
 
                     var hitMarkers = [];
                     hitMarkers.push({ type: "circle", left: 0, top: 0, size: 15 });
                     hitMarkers.push({ type: "circle", left: 20, top: 0, size: 15 });
                     hitMarkers.push({ type: "circle", left: -20, top: 0, size: 15 });
-                    hitMarkers.push({ type: "circle", left: -40, top: 0, size: 15 });
+                    hitMarkers.push({ type: "circle", left: 40, top: 0, size: 15 });
                     hitMarkers.push({ type: "circle", left: 0, top: 20, size: 10 });
                     hitMarkers.push({ type: "circle", left: 0, top: -20, size: 10 });
                     //hitMarkers.push({ type: "rectangle", left: 0, top: 0, height: 30, width: 50 });
@@ -424,14 +424,14 @@
 
                     
                     startPosition = {
-                        x : 50,
-                        y : 250
+                        x : 100,
+                        y : 300
                     };
 
                     hitMarkers = [];
                     hitMarkers.push({ type: "circle", left: 0, top: 0, size: 40 });
-                    hitMarkers.push({ type: "circle", left: 40, top: 20, size: 10 });
-                    hitMarkers.push({ type: "circle", left: 40, top: -20, size: 10 });
+                    hitMarkers.push({ type: "circle", left: -40, top: 20, size: 10 });
+                    hitMarkers.push({ type: "circle", left: -40, top: -20, size: 10 });
 
                     thing = new ThingToHitModel(startPosition, hitMarkers, 90 , 180);
                     self.thingsToHit.push(thing);
