@@ -16,3 +16,6 @@ Now the complex object can shoot, but maths is hard ...
 
 ![Example 3](HitDetection03.gif?raw=true "Example of shooting going wrong")
 
+Adding images
+
+![Example 4](HitDetection04.gif?raw=true "Images vs Hitmarkers")
